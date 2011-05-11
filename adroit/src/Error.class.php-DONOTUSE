@@ -1,0 +1,153 @@
+<?php
+/*
+Copyright (c) 2006-2011, Matt Smith
+All rights reserved.
+
+Licensed under the New BSD License; see adroit/LICENSE/ADROIT-LICENSE
+*/
+
+// Disable error reporting, in favor of our custom error reporting.
+error_reporting(0);
+ini_set('display_errors', false);
+
+// Error Methods
+define('E_METHOD_SYSLOG',	 1); // Syslog
+define('E_METHOD_FILE',		 2); // Log File
+define('E_METHOD_MAIL',		 4); // E-mail Log, WARNING: Sends individual mails per error.
+define('E_METHOD_CONSOLE',	 8); // JavaScript pop-up console (Default)
+define('E_METHOD_SILENT',	16); // Silent (Not Recommended)
+
+// Specify which Error Method(s) to use. Use bitwise | to use more than one.
+$ErrorMethod = E_METHOD_CONSOLE;
+
+// Log file to use, if $ErrorMethod & E_METHOD_FILE
+$ErrorFile = getcwd () . '/php_errors.log';
+
+// E-mail addresses to use, if $ErrorMethod & E_METHOD_MAIL (both vars req'd)
+$ErrorMailTo = '';		// use the address with or without the name, eg: "Bob" <bob@bigco.com>
+$ErrorMailFrom = 'noreply-php@localhost';	// use only the address, eg: no-reply@dev.bigco.com
+
+class Error
+{
+	// The core of Handler() comes from:
+	// http://us2.php.net/manual/en/ref.errorfunc.php (Example 579. Using error handling in a script)
+	static function Handler($errno, $errmsg, $filename, $linenum, $vars)
+	{
+		global $ErrorMethod, $ErrorFile, $ErrorMailTo, $ErrorMailFrom;
+		
+		// Silent Method, just return.
+		if ($ErrorMethod & E_METHOD_SILENT)
+			return;
+		
+		// timestamp for the error entry
+		$dt = date("Y-m-d H:i:s (T)");
+		
+		// define an assoc array of error string
+		// in reality the only entries we should
+		// consider are E_WARNING, E_NOTICE, E_USER_ERROR,
+		// E_USER_WARNING and E_USER_NOTICE
+		$errortype = array (
+			E_ERROR              => 'Error',
+			E_WARNING            => 'Warning',
+			E_PARSE              => 'Parsing Error',
+			E_NOTICE             => 'Notice',
+			E_CORE_ERROR         => 'Core Error',
+			E_CORE_WARNING       => 'Core Warning',
+			E_COMPILE_ERROR      => 'Compile Error',
+			E_COMPILE_WARNING    => 'Compile Warning',
+			E_USER_ERROR         => 'User Error',
+			E_USER_WARNING       => 'User Warning',
+			E_USER_NOTICE        => 'User Notice',
+			E_STRICT             => 'Runtime Notice',
+			E_RECOVERABLE_ERROR  => 'Catchable Fatal Error'
+		);
+		// set of errors for which a var trace will be saved
+		$user_errors = array(E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE);
+		
+		// Safe Fallbacks
+		if ( ($ErrorMethod & E_METHOD_FILE) && (empty($ErrorFile) || !is_readable($ErrorFile)) )
+			$ErrorMethod = E_METHOD_CONSOLE;
+		elseif ( ($ErrorMethod & E_METHOD_MAIL) && (empty($ErrorMailTo) || empty($ErrorMailFrom)) )
+			$ErrorMethod = E_METHOD_CONSOLE;
+		
+		// Execute Syslog Method
+		if ($ErrorMethod & E_METHOD_SYSLOG) {
+			$err = "{$errno} {$errortype[$errno]} {$errmsg} {$filename} {$linenum}";
+			ini_set('error_log','syslog');
+			error_log($err, 0);
+		}
+		
+		// Execute Log File Method
+		if ($ErrorMethod & E_METHOD_FILE) {
+			$err = "{$dt} {$errno} {$errortype[$errno]} {$errmsg} {$filename} {$linenum}\n";
+			error_log($err, 3, $ErrorFile);
+		}
+		
+		// Execute Mail Log Method
+		if ($ErrorMethod & E_METHOD_MAIL) {
+			$err = "{$dt} {$errno} {$errortype[$errno]} {$errmsg} {$filename} {$linenum}\n";
+			if (Error::doMail($ErrorMailTo, $ErrorMailFrom, 'PHP Application Error', $err) === false)
+			{
+				// Fallback to the syslog method, if mailing fails.
+				$err = "{$errno} {$errortype[$errno]} {$errmsg} {$filename} {$linenum}";
+				ini_set('error_log','syslog');
+				error_log($err, 0);
+			}
+		}
+		
+		// Execute JavaScript Console Method
+		if ($ErrorMethod & E_METHOD_CONSOLE) {
+			$err = "{$dt} {$errno} {$errortype[$errno]} {$errmsg} {$filename} {$linenum}<br />\n";
+			if (in_array($errno, $user_errors))
+				$err .= '<pre>'.htmlentities(print_r($vars, true))."</pre><hr />\n";
+			Error::doConsole($err);
+		}
+	}
+	
+	// 
+	static function doMail($to, $from, $subject, $message, $extra_headers = null)
+	{
+		// Remove line breaks in the subject.
+		$subject = str_replace('\n', '', $subject);
+		$subject = str_replace("\n", '', $subject);
+		
+		// Replace literal \n's with the new line char.
+		$message = str_replace('\n', "\n", $message);
+		
+		// (Windows only) Fix full stops at the start of a line.
+		if (strtoupper(substr(php_uname('s'), 0, 3)) === 'WIN')
+			$message = str_replace("\n.", "\n..", $message);
+		
+		// Mail Headers (From, CC, BCC, etc)
+		$headers = "From: {$from}\r\n";
+		if ($extra_headers != null)
+			$headers .= $extra_headers;
+		
+		// Set the envelope sender.
+		$param = "-f <{$from}>";
+		
+		return mail($to, $subject, $message, $headers, $param);
+	}
+	
+	// The core of doConsole() comes from:
+	// http://www.javascripter.net/faq/writingt.htm
+	// The JavaScript is compressed, so as not to get in the way
+	// when viewing a page's source.
+	static function doConsole($err)
+	{
+		$err = quotemeta($err);
+		$err = str_replace("\n", '\n', $err);
+		echo <<<EOF
+<script type="text/javascript">
+<!--
+var oldcontent;writeConsole("<div style=\"border-bottom: 1px solid black; margin-bottom: 2px;\"><code>{$err}</code></div>");function writeConsole(content){if(oldcontent){oldcontent=oldcontent+content;}else{oldcontent=content;}top.consoleRef=window.open('','phperrorconsole','width=600,height=250,scrollbars,resizable');top.consoleRef.document.writeln('<html><head><title>PHP Error Console</title></head><body bgcolor=white onLoad="self.focus()">'+oldcontent+'</body></html>');top.consoleRef.document.close();}
+// -->
+</script>
+
+EOF;
+	}
+}
+
+// Set the error handler to our custom error handler.
+set_error_handler(array('Error', 'Handler'));
+?>
