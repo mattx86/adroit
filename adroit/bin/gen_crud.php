@@ -20,11 +20,18 @@ else
 	$table = $argv[2];
 }
 
-if (!DB_ENABLED)
-	die("Error: Database disabled (see DB_ENABLED in app/config/db.conf.php)\n\n");
-
-if (!isset($db->$use_db))
-	die("Error: Database connection not set ($use_db) (see app/config/db.conf.php)\n\n");
+if (!isset($db->$use_db->link)
+	||
+		(
+			isset($db->$use_db->link)
+			&&
+			$db->$use_db->link === FALSE
+		)
+	)
+{
+	die("Error: The database connection \"$use_db\" is not working;\n"
+		."it may not be configured. (see adroit/app/config/db.conf.php)\n\n");
+}
 
 /*
 Pass in table

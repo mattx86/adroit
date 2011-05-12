@@ -48,8 +48,8 @@ if (APP_GZCOMPRESS)
 // Also functions like an OO_Superglobal ($Session)
 $Session = new Session(APP_START_SESSION);
 
-if (APP_USERS)
-	$users = new Users($db->test);
+if (APP_USERS && isset($db->default->link) && $db->default->link !== FALSE)
+	$users = new Users($db->default);
 
 // Determine if a redirect is required.
 $__redirect = FALSE;

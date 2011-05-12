@@ -19,7 +19,7 @@ define('MYSQL_FILTER_HTML_ENTITIES', 1);
 class MySQL
 {
 	/* CLASS VARIABLES */
-	public $link;
+	public $link = FALSE;
 	public $query;
 	public $result;
 	private $previous_db = NULL;
