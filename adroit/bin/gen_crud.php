@@ -7,7 +7,7 @@ All rights reserved.
 Licensed under the New BSD License; see adroit/LICENSE/ADROIT-LICENSE
 */
 
-define('ADROIT_PATH', '/var/www/html/dev/adroit');
+define('ADROIT_PATH', dirname(__FILE__).'/../');
 include(ADROIT_PATH.'/app/cli.inc.php');
 
 if ($argc != 3)

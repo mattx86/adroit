@@ -7,38 +7,27 @@ All rights reserved.
 Licensed under the New BSD License; see adroit/LICENSE/ADROIT-LICENSE
 */
 
-// Display usage
-if (!isset($argv[1]))
-	die("usage: $argv[0] <path to adroit directory>\n\n");
+define('ADROIT_PATH', dirname(__FILE__).'/../');
 
 // Display information
-echo "Attempting to generate Adroit Loader config.\n";
-
-// Capture source directory input
-$src_dir = $argv[1];
-
-// Remove trailing slash in $src_dir, if present.
-if ($src_dir[strlen($src_dir)-1] == '/')
-	$src_dir = substr($src_dir, 0, strlen($src_dir)-1);
+echo "Generating the Adroit Loader config...\n";
 
 // get_files():
 // Returns an array list of files with full paths, filtered by PCRE $filter.
 // Ignore the $internal_call variable when using this function.
 function get_files($path, $filter, $internal_call = FALSE)
 {
-	global $src_dir;
-	
-	$listing = array_diff(scandir($src_dir.'/'.$path), array('.', '..'));
+	$listing = array_diff(scandir(ADROIT_PATH.'/'.$path), array('.', '..'));
 	$dirs = array();
 	foreach ($listing as $dir)
 	{
-		if (is_dir($src_dir.'/'.$path.'/'.$dir))
+		if (is_dir(ADROIT_PATH.'/'.$path.'/'.$dir))
 		{
 			$dirs = array_merge($dirs, get_files($path.'/'.$dir, $filter, TRUE));
 		}
 		else
 		{
-			$dirs[] = $src_dir.'/'.$path.'/'.$dir;
+			$dirs[] = ADROIT_PATH.'/'.$path.'/'.$dir;
 		}
 	}
 	
@@ -207,11 +196,11 @@ foreach ($inc_files as $inc_file)
 // Make file paths relative by removing the full path to the source directory.
 unset($class, $lib, $inc);
 foreach ($classes as $class_name => $class_property)
-	$classes[$class_name]['class_file'] = str_replace($src_dir.'/', '', $classes[$class_name]['class_file']);
+	$classes[$class_name]['class_file'] = str_replace(ADROIT_PATH.'/', '', $classes[$class_name]['class_file']);
 foreach ($libs as $lib_name => $lib_property)
-	$libs[$lib_name]['lib_file'] = str_replace($src_dir.'/', '', $libs[$lib_name]['lib_file']);
+	$libs[$lib_name]['lib_file'] = str_replace(ADROIT_PATH.'/', '', $libs[$lib_name]['lib_file']);
 foreach ($incs as $inc_name => $inc_property)
-	$incs[$inc_name]['inc_file'] = str_replace($src_dir.'/', '', $incs[$inc_name]['inc_file']);
+	$incs[$inc_name]['inc_file'] = str_replace(ADROIT_PATH.'/', '', $incs[$inc_name]['inc_file']);
 
 //var_dump($classes);
 //var_dump($libs);
@@ -224,6 +213,6 @@ $conf['libs'] = $libs;
 $conf['incs'] = $incs;
 
 // Serialize and save the $conf array
-file_put_contents($src_dir.'/src/Loader.conf.php', serialize($conf));
+file_put_contents(ADROIT_PATH.'/src/Loader.conf.php', serialize($conf));
 
-echo "\nDone.\n\n";
+echo "Done.\n\n";
