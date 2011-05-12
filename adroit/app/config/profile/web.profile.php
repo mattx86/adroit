@@ -10,7 +10,7 @@ define('APP_BEAUTIFY',			TRUE);	// Helps with debugging browser output.
 define('APP_GZCOMPRESS',		TRUE);	// GZip Compression
 define('APP_USERS',				TRUE);	// Users
 define('APP_START_SESSION',		TRUE);	// Sessions
-define('APP_FORCE_HTTPS',		TRUE);	// Force HTTPS
+define('APP_FORCE_HTTPS',		FALSE);	// Force HTTPS
 
 // Default Content Type
 define('APP_CONTENT_TYPE',		'text/html');
