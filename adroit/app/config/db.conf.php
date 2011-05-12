@@ -7,6 +7,6 @@ if (DB_ENABLED)
 {
 	$db = new MySQL_Container;
 	
-	$db->add('test', '127.0.0.1', 'dbuser', 'dbpass');
-	$db->test->select_db('test');
+	$db->add('connection_name', 'localhost', 'dbuser', 'dbpass');
+	$db->connection_name->select_db('dbname');
 }
