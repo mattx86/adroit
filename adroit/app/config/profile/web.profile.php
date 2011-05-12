@@ -1,9 +1,9 @@
 <?php
 // Adroit Web Profile
 
-// Paths and Locations
-define('APP_DOCROOT_PATH',		'/var/www/html/dev/public');
-define('APP_HTTP_PATH',			'/dev/public');
+// Paths and Locations (no trailing slash)
+define('APP_DOCROOT_PATH',		ADROIT_PATH.'/../public'); // Filesystem Path
+define('APP_HTTP_PATH',			'/'); // HTTP Path
 
 // General Settings
 define('APP_BEAUTIFY',			TRUE);	// Helps with debugging browser output.
