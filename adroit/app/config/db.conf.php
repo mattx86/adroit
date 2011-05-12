@@ -1,7 +1,7 @@
 <?php
 
 // Adroit Database Configuration
-define('DB_ENABLED',			TRUE);
+define('DB_ENABLED',			FALSE);
 
 if (DB_ENABLED)
 {
