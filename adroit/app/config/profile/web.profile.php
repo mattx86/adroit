@@ -3,7 +3,7 @@
 
 // Paths and Locations (no trailing slash)
 define('APP_DOCROOT_PATH',		ADROIT_PATH.'/../public'); // Filesystem Path
-define('APP_HTTP_PATH',			'/'); // HTTP Path
+define('APP_HTTP_PATH',			''); // HTTP Path (empty for 'root' HTTP path)
 
 // General Settings
 define('APP_BEAUTIFY',			TRUE);	// Helps with debugging browser output.
